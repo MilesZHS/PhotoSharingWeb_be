@@ -20,7 +20,7 @@ class Img extends Base
 		try{
 			$res = model('Img')
 				->order('create_time desc')
-				->field('id,imgUrl,create_time,name,download,collect,like,user_id')
+				->field('id,imgUrl,create_time,name,download,collect,like,user_id,tags')
 				->where('homeShow',1)
 				->select();
 			$like = new Like();
@@ -36,6 +36,12 @@ class Img extends Base
 			$res = isDownload($res,$downloadList);
 		}catch (Exception $e){
 			return show(0,$e->getMessage(),[],403);
+		}
+		for($i = 0 ; $i < count($res) ; $i ++){
+			if (!preg_match("/([\x81-\xfe][\x40-\xfe])/", $res[$i]['name'], $match)) {
+				//不含有汉字
+				$res[$i]['name'] = '# '.$res[$i]['tags'].' #';
+			}
 		}
 		return show(1,'返回成功',$res,200);
 	}
@@ -79,7 +85,7 @@ class Img extends Base
 			$res = model('Img')
 				->order('like desc')
 				->limit(10)
-				->field('id,imgUrl,create_time,name,download,collect,like,user_id')
+				->field('id,imgUrl,create_time,name,download,collect,like,user_id,tags')
 				->select();
 
 			//查询是否已经点过赞
@@ -101,6 +107,12 @@ class Img extends Base
 		}catch (Exception $e){
 			return show(0,$e->getMessage(),[],403);
 		}
+		for($i = 0 ; $i < count($res) ; $i ++){
+			if (!preg_match("/([\x81-\xfe][\x40-\xfe])/", $res[$i]['name'], $match)) {
+				//不含有汉字
+				$res[$i]['name'] = '# '.$res[$i]['tags'].' #';
+			}
+		}
 		return show(1,'返回成功',$res,200);
 	}
 
@@ -121,6 +133,30 @@ class Img extends Base
 			$key['tags'] = explode(',',$key['tags']);
 		}
 		return show(1,'返回成功',$res);
+	}
+
+	public function updateImgInfo(){
+		if (!request()->isPost()){
+			return show(0,'请求错误',[],403);
+		}
+		$data = input('post.');
+		try{
+			model('Img')->where('id',$data['id'])->update($data);
+		}catch (Exception $e){
+			return show(0,$e->getMessage(),[],403);
+		}
+		try{
+			$res = model('Img')
+				->where('id',$data['id'])
+				->field('id,name,create_time,zipUrl,download,like,collect,homeShow,tags,imgUrl')
+				->select();
+		}catch (Exception $e){
+			return show(0,$e->getMessage(),[],403);
+		}
+		foreach ($res as $key){
+			$key['tags'] = explode(',',$key['tags']);
+		}
+		return show(1,'更新成功',$res);
 	}
 	
 }

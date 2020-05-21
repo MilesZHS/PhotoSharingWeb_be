@@ -58,6 +58,39 @@ class User extends Base
 		return show(1,'修改成功',[]);
 	}
 
-
+	public function update(){
+		if (!request()->isPost()){
+			return show(0,'请求错误',[],403);
+		}
+		$data = input('post.');
+		try{
+			model('User')->where('id',$data['id'])->update($data);
+		}catch (Exception $e){
+			return show(0,$e->getMessage(),[],403);
+		}
+		try{
+			$res = model('User')
+				->where('id',$data['id'])
+				->field('id,username,create_time,gender,birthday,avatar')
+				->find();
+		}catch (Exception $e){
+			return show(0,$e->getMessage(),[],403);
+		}
+		//获取收藏数
+		try{
+			$collect = new Collect();
+			$res['collectNum'] = $collect->where('user_id',$data['id'])->count();
+			$like = new Like();
+			$res['likeNum'] = $like->where('user_id',$data['id'])->count();
+			$download = new Download();
+			$res['downloadNum'] = $download->where('user_id',$data['id'])->count();
+			$res['likedNum'] = $like->where('ori_user_id',$data['id'])->count();
+			$img = new Img();
+			$res['uploadNum'] = $img->where('user_id',$data['id'])->count();
+		}catch (Exception $e){
+			return show(0,$e->getMessage(),[],403);
+		}
+		return show(1,'修改成功',$res);
+	}
 
 }

@@ -4,8 +4,11 @@
 namespace app\classify\controller;
 
 
+use app\collect\model\Collect;
 use app\common\controller\Base;
+use app\download\model\Download;
 use app\image\model\Img;
+use app\like\model\Like;
 use think\Exception;
 
 class Classify extends Base
@@ -77,14 +80,68 @@ class Classify extends Base
 		$data = input('get.');
 		try{
 			$img = new Img();
-			$list = $img
+			$res = $img
 				->where('homeShow','1')
 				->where('tags','like','%'.$data['name'].'%')
 				->column('id,name,imgUrl,like,collect,download');
+
 		}catch (Exception $e){
 			return show(0,$e->getMessage(),[],403);
 		}
-		$res = array_values($list);
+		$res = array_values($res);
+		try{
+
+			$like = new Like();
+			$likeList = $like->where('user_id',$data['id'])->column('img_id');
+			for($i = 0 ; $i < count($res) ; $i++){
+				if (empty($likeList)){
+					$res[$i]['isLike'] = false;
+				}
+				for($j = 0 ; $j < count($likeList) ; $j++){
+					if($res[$i]['id'] == $likeList[$j]){
+						$res[$i]['isLike'] = true;
+						break;
+					}else{
+						$res[$i]['isLike'] = false;
+					}
+				}
+			}
+
+			$collect = new Collect();
+			$collectList = $collect->where('user_id',$data['id'])->column('img_id');
+
+			for($i = 0 ; $i < count($res) ; $i++){
+				if (empty($collectList)){
+					$res[$i]['isCollect'] = false;
+				}
+				for($j = 0 ; $j < count($collectList) ; $j++){
+					if($res[$i]['id'] == $collectList[$j]){
+						$res[$i]['isCollect'] = true;
+						break;
+					}else{
+						$res[$i]['isCollect'] = false;
+					}
+				}
+			}
+
+			$download = new Download();
+			$downloadList = $download->where('user_id',$data['id'])->column('img_id');
+			for($i = 0 ; $i < count($res) ; $i++){
+				if (empty($downloadList)){
+					$res[$i]['isDownload'] = false;
+				}
+				for($j = 0 ; $j < count($downloadList) ; $j++){
+					if($res[$i]['id'] == $downloadList[$j]){
+						$res[$i]['isDownload'] = true;
+						break;
+					}else{
+						$res[$i]['isDownload'] = false;
+					}
+				}
+			}
+		}catch (Exception $e){
+			return show(0,$e->getMessage(),[],403);
+		}
 		return show(1,'查询成功',$res,200);
 	}
 

@@ -22,8 +22,10 @@ Route::get('/uploadrecord','image/img/uploadrecord');
 Route::get('/downloadrecord','download/download/downloadrecord');
 Route::get('/likerecord','like/like/likerecord');
 Route::get('/collectrecord','collect/collect/collectrecord');
-Route::get('likedrecord','like/like/likedrecord');
+Route::get('/likedrecord','like/like/likedrecord');
 Route::post('/avatartoken','image/upload/getavatartoken');
+Route::post('/updateuserinfo','user/user/update');
+Route::post('/updateimginfo','image/img/updateimginfo');
 
 //图片上传接口
 Route::post('/uploadtoken','image/upload/gettoken');
